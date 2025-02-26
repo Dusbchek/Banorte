@@ -13,12 +13,12 @@ class SpecialSection extends Model
     protected $table = 'special_sections';
 
     protected $fillable = [
-        'name',       
-        'description',  
-        'id',       
-        'user_id', 
-        'balance'      
-            
+        'user_id',
+        'name',
+        'description',
+        'balance',
+        'created_at',
+        'updated_at',
     ];
 
   

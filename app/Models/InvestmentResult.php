@@ -15,10 +15,11 @@ class InvestmentResult extends Model
 
 
     protected $fillable = [
-        'investment_id',  
-        'result',         
-        'date',         
-         
+        'investment_id',
+        'result',
+        'date',
+        'created_at',
+        'updated_at',
     ];
 
   

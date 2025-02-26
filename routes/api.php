@@ -14,6 +14,57 @@ Route::middleware('auth:sanctum')->delete('/special_sections/{id}', [SpecialSect
 Route::middleware('auth:sanctum')->put('/investments/{id}', [InvestmentController::class, 'update']);
 Route::middleware('auth:sanctum')->put('/investments-results/{id}', [InvestmentResultController::class, 'update']);
 
+Route::middleware('auth:sanctum')->post('/investment-results', function (Request $request) {
+    // Validación de los campos necesarios
+    $request->validate([
+        'investment_id' => 'required|exists:investments,id', // El ID de la inversión debe existir
+        'result' => 'required|numeric', // El resultado debe ser un número
+        'date' => 'required|date', // La fecha debe ser una fecha válida
+    ]);
+
+    // Crear el nuevo registro de resultado de inversión
+    $investmentResult = InvestmentResult::create([
+        'investment_id' => $request->investment_id,
+        'result' => $request->result,
+        'date' => $request->date,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    // Responder con el resultado de la creación
+    return response()->json([
+        'message' => 'Resultado de la inversión creado con éxito.',
+        'investment_result' => $investmentResult,
+    ], 201);
+});
+
+Route::middleware('auth:sanctum')->post('/investments', function (Request $request) {
+    $request->validate([
+        'user_id' => 'required|exists:users,id', 
+        'special_section_id' => 'required|exists:special_sections,id', 
+        'investment_type' => 'required|string|in:acciones,crypto,otro', 
+        'amount' => 'required|numeric|min:0', 
+        'result' => 'required|numeric', 
+        'status' => 'required|string|in:completado,pendiente,fallida', 
+    ]);
+
+    $investment = Investment::create([
+        'user_id' => $request->user_id,
+        'special_section_id' => $request->special_section_id,
+        'investment_type' => $request->investment_type,
+        'amount' => $request->amount,
+        'result' => $request->result,
+        'status' => $request->status,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    return response()->json([
+        'message' => 'Inversión creada con éxito.',
+        'investment' => $investment,
+    ], 201);
+});
+
 Route::middleware('auth:sanctum')->post('/special-sections', function (Request $request) {
     $request->validate([
         'user_id' => 'required|exists:users,id', 
