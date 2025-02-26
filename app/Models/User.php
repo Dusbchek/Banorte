@@ -24,6 +24,12 @@ class User extends Authenticatable
         
     ];
 
+
+    public function investments()
+    {
+        return $this->hasMany(Investment::class);
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *

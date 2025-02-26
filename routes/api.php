@@ -6,12 +6,13 @@ use App\Models\User;
 use App\Http\Controllers\SpecialSectionController;
 use App\Http\Controllers\InvestmentController;
 use App\Http\Controllers\InvestmentResultController;
-use App\Http\Controllers\FinancialAdvice;
 use App\Models\FinancialAdvice as ModelsFinancialAdvice;
 use App\Models\Investment;
 use App\Models\InvestmentResult;
 use App\Models\SpecialSection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+
 
 Route::middleware('auth:sanctum')->put('/special_sections/{id}', [SpecialSectionController::class, 'update']);
 Route::middleware('auth:sanctum')->delete('/special_sections/{id}', [SpecialSectionController::class, 'destroy']);
@@ -61,32 +62,7 @@ Route::middleware('auth:sanctum')->post('/investment-results', function (Request
     ], 201);
 });
 
-Route::middleware('auth:sanctum')->post('/investments', function (Request $request) {
-    $request->validate([
-        'user_id' => 'required|exists:users,id', 
-        'special_section_id' => 'required|exists:special_sections,id', 
-        'investment_type' => 'required|string|in:acciones,crypto,otro', 
-        'amount' => 'required|numeric|min:0', 
-        'result' => 'required|numeric', 
-        'status' => 'required|string|in:completado,pendiente,fallida', 
-    ]);
 
-    $investment = Investment::create([
-        'user_id' => $request->user_id,
-        'special_section_id' => $request->special_section_id,
-        'investment_type' => $request->investment_type,
-        'amount' => $request->amount,
-        'result' => $request->result,
-        'status' => $request->status,
-        'created_at' => now(),
-        'updated_at' => now(),
-    ]);
-
-    return response()->json([
-        'message' => 'Inversión creada con éxito.',
-        'investment' => $investment,
-    ], 201);
-});
 
 Route::middleware('auth:sanctum')->post('/special-sections', function (Request $request) {
     $request->validate([
@@ -111,23 +87,51 @@ Route::middleware('auth:sanctum')->post('/special-sections', function (Request $
     ], 201);  
 });
 
-Route::group(["middleware" => ["auth:santum"]],function(){
+
+Route::middleware('auth:sanctum')->get('/daily_incomes', function (Request $request) {
+    $user = $request->user(); 
+
+    if (!$user) {
+        return response()->json(['error' => 'Usuario no autenticado'], 401);
+    }
+
+    $dailyIncome = DB::table('daily_incomes')
+                     ->where('user_id', $user->id)
+                     ->orderBy('created_at', 'desc') 
+                     ->first();
+
+    if (!$dailyIncome) {
+        return response()->json(['error' => 'No se encontraron ingresos diarios para este usuario'], 404);
+    }
+
+    return response()->json(['balance_after' => $dailyIncome->balance_after]);
+});
+
+
+Route::middleware('auth:sanctum')->get('/investments', function (Request $request) {
+    // Obtiene todas las inversiones
+    $investments = Investment::all();
+
+    // Devuelve las inversiones como respuesta JSON
+    return response()->json(['investments' => $investments]);
+});
+
+
+Route::post("/logout", function (Request $request) {
+    // Revocar el token actual del usuario
+    $request->user()->currentAccessToken()->delete();
+
+    return response()->noContent();  // Retorna un código de éxito 204 sin contenido
+})->middleware('auth:sanctum');
+
+Route::group(["middleware" => ["auth:sanctum"]],function(){
 
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
 
-   
-
-
-    Route::post("/logout", function (Request $request){
-
-
-
-        $request->user()->currentAccessToken()->delete();
-
-        return response()->noContent();
-    });
+  
+    
 
 
 
@@ -141,10 +145,9 @@ Route::group(["middleware" => ["auth:santum"]],function(){
             return response()->json($specialSections);
         });
     
-        Route::get('/daily_incomes', function () {
-            $dailyIncomes = DB::table('daily_incomes')->get();
-            return response()->json($dailyIncomes);
-        });
+        
+        
+     
     
         Route::get('/daily_expenses', function () {
             $dailyExpenses = DB::table('daily_expenses')->get();
@@ -166,26 +169,23 @@ Route::group(["middleware" => ["auth:santum"]],function(){
 } );
 
 Route::post('/login', function (Request $request) {
-   
     $request->validate([
         'name' => 'required|string|max:255',
     ]);
 
-
     $user = User::where('name', $request->name)->first();
 
- 
     if (!$user) {
         return response()->json([
             'error' => 'El usuario no existe. Intenta nuevamente.'
         ], 404); 
     }
 
-    $token = $user->createToken('YourAppName')->plainTextToken;
+    $token = $user->createToken('BanorteApp')->plainTextToken;
 
-    // Devolver la respuesta con el token
     return response()->json([
         'token' => $token,
         'user' => $user,  
     ]);
 });
+

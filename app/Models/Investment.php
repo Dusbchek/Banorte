@@ -13,16 +13,7 @@ class Investment extends Model
 
     protected $table = 'investments';
 
-    protected $fillable = [
-        'user_id',
-        'special_section_id',
-        'investment_type',
-        'amount',
-        'result',
-        'status',
-        'created_at',
-        'updated_at',
-    ];
+    protected $fillable = ['user_id', 'special_section_id', 'investment_type', 'amount', 'result', 'status', 'name'];
 
 
     protected $dates = [
