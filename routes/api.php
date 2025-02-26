@@ -6,8 +6,12 @@ use App\Models\User;
 use App\Http\Controllers\SpecialSectionController;
 use App\Http\Controllers\InvestmentController;
 use App\Http\Controllers\InvestmentResultController;
-
-
+use App\Http\Controllers\FinancialAdvice;
+use App\Models\FinancialAdvice as ModelsFinancialAdvice;
+use App\Models\Investment;
+use App\Models\InvestmentResult;
+use App\Models\SpecialSection;
+use Illuminate\Support\Facades\DB;
 
 Route::middleware('auth:sanctum')->put('/special_sections/{id}', [SpecialSectionController::class, 'update']);
 Route::middleware('auth:sanctum')->delete('/special_sections/{id}', [SpecialSectionController::class, 'destroy']);
@@ -21,7 +25,7 @@ Route::middleware('auth:sanctum')->post('/financial-advice', function (Request $
         'advice_type' => 'required|string', 
     ]);
 
-    $financialAdvice = FinancialAdvice::create([
+    $financialAdvice = ModelsFinancialAdvice::create([
         'user_id' => $request->user()->id,  
         'advice' => $request->advice,
         'advice_type' => $request->advice_type,
@@ -118,9 +122,15 @@ Route::group(["middleware" => ["auth:santum"]],function(){
 
     Route::post("/logout", function (Request $request){
 
+        $user = User::where('name', $request->name)->first();
+
+
         $request->$user()->currentAccessToken()->delete();
 
         return response()->noContent();
+    });
+
+
 
         Route::get('/transactions', function () {
             $transactions = DB::table('transactions')->get();
@@ -151,7 +161,7 @@ Route::group(["middleware" => ["auth:santum"]],function(){
             $investmentsResults = DB::table('investments_results')->get();
             return response()->json($investmentsResults);
         });
-});
+
 
 
 } );

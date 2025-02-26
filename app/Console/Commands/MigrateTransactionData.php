@@ -247,13 +247,10 @@ private function migrateInvestments(): void
 {
     $this->info('Migrando inversiones...');
 
-    // Vaciar la tabla 'investments'
     DB::connection('mysql')->table('investments');
 
-    // Obtener todos los usuarios
     $users = DB::connection('mysql')->table('users')->pluck('id');
 
-    // Obtener todas las secciones especiales
     $specialSections = DB::connection('mysql')->table('special_sections')->pluck('id');
 
     $investmentTypes = ['acciones', 'otro', 'crypto'];
@@ -261,7 +258,6 @@ private function migrateInvestments(): void
 
     $investmentsData = [];
 
-    // Generar 500 registros
     for ($i = 0; $i < 500; $i++) {
         $userId = $users->random();
 
@@ -271,7 +267,7 @@ private function migrateInvestments(): void
 
         $amount = rand(1000, 100000);
 
-        $result = rand(-10000, 20000); // Pérdidas de hasta -10,000 y ganancias de hasta 20,000
+        $result = rand(-10000, 20000); 
 
         $status = $statuses[array_rand($statuses)];
 
@@ -299,26 +295,23 @@ private function migrateInvestmentResults(): void
 {
     $this->info('Migrando resultados de inversiones...');
 
-    // Obtener todos los registros de la tabla 'investments'
     $investments = DB::connection('mysql')->table('investments')->select('id')->get();
 
-    // Generar datos para la tabla 'investment_results'
     $investmentResultsData = [];
 
     foreach ($investments as $investment) {
-        // Simular un resultado para cada inversión
-        $result = rand(-10000, 20000); // Resultados de inversión entre -10,000 y 20,000
+        
+        $result = rand(-10000, 20000); 
 
         $investmentResultsData[] = [
-            'investment_id' => $investment->id,  // Relacionamos con el id de la inversión
-            'result' => $result,                  // Resultado de la inversión
-            'date' => Carbon::now()->format('Y-m-d'), // Fecha del resultado (puedes modificarlo según tu lógica)
+            'investment_id' => $investment->id,  
+            'result' => $result,                  
+            'date' => Carbon::now()->format('Y-m-d'), 
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ];
     }
 
-    // Insertar los resultados de las inversiones en la tabla 'investment_results'
     if (!empty($investmentResultsData)) {
         DB::connection('mysql')->table('investment_results')->insert($investmentResultsData);
         $this->info('¡Resultados de inversiones migrados con éxito!');
@@ -330,7 +323,6 @@ private function migrateFinancialAdvices(): void
 {
     $this->info('Migrando consejos financieros...');
 
-    // Obtener todos los usuarios
     $users = DB::connection('mysql')->table('users')->pluck('id');
 
     $adviceTypes = ['inversión', 'ahorro', 'presupuesto', 'riesgo', 'diversificación'];
@@ -345,7 +337,6 @@ private function migrateFinancialAdvices(): void
 
     $financialAdvicesData = [];
 
-    // Generar 500 registros
     for ($i = 0; $i < 500; $i++) {
         $userId = $users->random();
         $adviceType = $adviceTypes[array_rand($adviceTypes)];
@@ -360,7 +351,6 @@ private function migrateFinancialAdvices(): void
         ];
     }
 
-    // Inserta los datos en la tabla 'financial_advices'
     if (!empty($financialAdvicesData)) {
         DB::connection('mysql')->table('financial_advices')->insert($financialAdvicesData);
         $this->info('¡Consejos financieros migrados con éxito!');
