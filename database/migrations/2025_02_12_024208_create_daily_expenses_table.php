@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('daily_expense', function (Blueprint $table) {
+        Schema::create('daily_expenses', function (Blueprint $table) {
             $table->id(); // Crea la columna 'id' como PK
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade'); // FK hacia users
             $table->decimal('expense_amount', 10, 2);

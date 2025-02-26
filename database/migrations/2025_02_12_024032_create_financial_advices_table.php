@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('financial_advice', function (Blueprint $table) {
+        Schema::create('financial_advices', function (Blueprint $table) {
             $table->id(); // Crea la columna 'id' como PK
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade'); // FK hacia users
             $table->text('advice');
