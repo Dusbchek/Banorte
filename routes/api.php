@@ -14,15 +14,35 @@ Route::middleware('auth:sanctum')->delete('/special_sections/{id}', [SpecialSect
 Route::middleware('auth:sanctum')->put('/investments/{id}', [InvestmentController::class, 'update']);
 Route::middleware('auth:sanctum')->put('/investments-results/{id}', [InvestmentResultController::class, 'update']);
 
-Route::middleware('auth:sanctum')->post('/investment-results', function (Request $request) {
-    // Validación de los campos necesarios
+Route::middleware('auth:sanctum')->post('/financial-advice', function (Request $request) {
+    
     $request->validate([
-        'investment_id' => 'required|exists:investments,id', // El ID de la inversión debe existir
-        'result' => 'required|numeric', // El resultado debe ser un número
-        'date' => 'required|date', // La fecha debe ser una fecha válida
+        'advice' => 'required|string', 
+        'advice_type' => 'required|string', 
     ]);
 
-    // Crear el nuevo registro de resultado de inversión
+    $financialAdvice = FinancialAdvice::create([
+        'user_id' => $request->user()->id,  
+        'advice' => $request->advice,
+        'advice_type' => $request->advice_type,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    return response()->json([
+        'message' => 'Consejo financiero creado con éxito.',
+        'financial_advice' => $financialAdvice,
+    ], 201);
+});
+
+Route::middleware('auth:sanctum')->post('/investment-results', function (Request $request) {
+   
+    $request->validate([
+        'investment_id' => 'required|exists:investments,id', 
+        'result' => 'required|numeric',
+        'date' => 'required|date',
+    ]);
+
     $investmentResult = InvestmentResult::create([
         'investment_id' => $request->investment_id,
         'result' => $request->result,
@@ -31,7 +51,6 @@ Route::middleware('auth:sanctum')->post('/investment-results', function (Request
         'updated_at' => now(),
     ]);
 
-    // Responder con el resultado de la creación
     return response()->json([
         'message' => 'Resultado de la inversión creado con éxito.',
         'investment_result' => $investmentResult,
