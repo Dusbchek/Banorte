@@ -122,10 +122,9 @@ Route::group(["middleware" => ["auth:santum"]],function(){
 
     Route::post("/logout", function (Request $request){
 
-        $user = User::where('name', $request->name)->first();
 
 
-        $request->$user()->currentAccessToken()->delete();
+        $request->user()->currentAccessToken()->delete();
 
         return response()->noContent();
     });
