@@ -14,6 +14,29 @@ Route::middleware('auth:sanctum')->delete('/special_sections/{id}', [SpecialSect
 Route::middleware('auth:sanctum')->put('/investments/{id}', [InvestmentController::class, 'update']);
 Route::middleware('auth:sanctum')->put('/investments-results/{id}', [InvestmentResultController::class, 'update']);
 
+Route::middleware('auth:sanctum')->post('/special-sections', function (Request $request) {
+    $request->validate([
+        'user_id' => 'required|exists:users,id', 
+        'name' => 'required|string|max:255',
+        'description' => 'nullable|string', 
+        'balance' => 'required|numeric|min:0',
+    ]);
+
+    $specialSection = SpecialSection::create([
+        'user_id' => $request->user_id,
+        'name' => $request->name,
+        'description' => $request->description ?? null,  
+        'balance' => $request->balance,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    return response()->json([
+        'message' => 'Sección especial creada con éxito.',
+        'special_section' => $specialSection,
+    ], 201);  
+});
+
 Route::group(["middleware" => ["auth:santum"]],function(){
 
     Route::get('/user', function (Request $request) {
