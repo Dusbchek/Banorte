@@ -3,14 +3,25 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Models\User;
+use App\Http\Controllers\SpecialSectionController;
+use App\Http\Controllers\InvestmentController;
+use App\Http\Controllers\InvestmentResultController;
 
 
 
-Rounte::group(["middleware" => ["auth:santum"]],function(){
+Route::middleware('auth:sanctum')->put('/special_sections/{id}', [SpecialSectionController::class, 'update']);
+Route::middleware('auth:sanctum')->delete('/special_sections/{id}', [SpecialSectionController::class, 'destroy']);
+Route::middleware('auth:sanctum')->put('/investments/{id}', [InvestmentController::class, 'update']);
+Route::middleware('auth:sanctum')->put('/investments-results/{id}', [InvestmentResultController::class, 'update']);
+
+Route::group(["middleware" => ["auth:santum"]],function(){
 
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
+
+   
+
 
     Route::post("/logout", function (Request $request){
 
