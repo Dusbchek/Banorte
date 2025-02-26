@@ -15,14 +15,16 @@ class MigrateTransactionData extends Command
     {
         try {
            
+           
             $this->migrateUsers();
             $this->migrateSpecialSections();
             $this->migrateServicePayments();
             $this->migrateCreditCardPayments();
-
-            $this->migrateDailyExpenses();  
-            $this->migrateDailyIncomes();   
-    
+            $this->migrateDailyExpenses();
+            $this->migrateDailyIncomes();
+            $this->migrateInvestments();
+            $this->migrateInvestmentResults();
+            $this->migrateFinancialAdvices();
 
             $this->info('¡Todas las transacciones y usuarios fueron migrados con éxito!');
             return Command::SUCCESS;
@@ -171,7 +173,6 @@ class MigrateTransactionData extends Command
 {
     $this->info('Migrando gastos diarios...');
 
-    // Obtener las transacciones desde la tabla 'transactions'
     $transactions = DB::connection('mysql')
         ->table('transactions')
         ->select('user_id', 'amount', 'created_at', 'updated_at')
@@ -180,28 +181,24 @@ class MigrateTransactionData extends Command
     $dailyExpensesData = [];
 
     foreach ($transactions as $transaction) {
-        // Obtener el saldo correspondiente del 'user_id' (que es 'id_cliente' en 'cuentas' de mysql2)
         $balanceAfter = DB::connection('mysql2')
             ->table('cuentas')
             ->where('id_cliente', $transaction->user_id)
-            ->value('saldo'); // Obtener el saldo de la tabla 'cuentas' que corresponde al 'user_id'
-
+            ->value('saldo'); 
         if ($balanceAfter === null) {
             $this->warn("No se encontró saldo para el cliente con user_id {$transaction->user_id}. Saltando...");
-            continue; // Si no se encuentra saldo, se salta la iteración
+            continue;
         }
 
-        // Preparamos los datos para la inserción
         $dailyExpensesData[] = [
             'user_id' => $transaction->user_id,
             'expense_amount' => $transaction->amount,
-            'balance_after' => $balanceAfter, // Usamos el saldo obtenido
+            'balance_after' => $balanceAfter, 
             'created_at' => $transaction->created_at,
             'updated_at' => $transaction->updated_at,
         ];
     }
 
-    // Si hay datos para insertar, los insertamos en la tabla 'daily_expenses'
     if (!empty($dailyExpensesData)) {
         DB::connection('mysql')->table('daily_expenses')->insert($dailyExpensesData);
         $this->info('¡Gastos diarios migrados con éxito!');
@@ -214,31 +211,29 @@ private function migrateDailyIncomes(): void
 {
     $this->info('Migrando ingresos diarios...');
 
-    // Vaciar la tabla 'daily_incomes'
     DB::connection('mysql')->table('daily_incomes')->truncate();
 
-    // Obtener los saldos de la tabla 'cuentas' y actualizar 'daily_incomes'
     $cuentas = DB::connection('mysql2')
         ->table('cuentas')
-        ->whereNotNull('id_cliente')  // Filtrar para asegurarnos de que 'id_cliente' no sea NULL
-        ->whereNotNull('saldo')      // Asegurarnos de que 'saldo' también no sea NULL
-        ->select('id_cliente', 'saldo') // Obtener el id_cliente y saldo
+        ->whereNotNull('id_cliente') 
+        ->whereNotNull('saldo')    
+        ->select('id_cliente', 'saldo') 
         ->get();
 
     $dailyIncomesData = [];
 
     foreach ($cuentas as $cuenta) {
-        // Preparar los datos para la inserción
+        
         $dailyIncomesData[] = [
-            'user_id' => $cuenta->id_cliente,  // 'user_id' será el 'id_cliente' de la tabla 'cuentas'
-            'income_amount' => $cuenta->saldo, // 'income_amount' será el 'saldo'
-            'balance_after' => $cuenta->saldo, // 'balance_after' será el 'saldo'
+            'user_id' => $cuenta->id_cliente,  
+            'income_amount' => $cuenta->saldo,
+            'balance_after' => $cuenta->saldo,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
         ];
     }
 
-    // Si hay datos para insertar, los insertamos en la tabla 'daily_incomes'
+    
     if (!empty($dailyIncomesData)) {
         DB::connection('mysql')->table('daily_incomes')->insert($dailyIncomesData);
         $this->info('¡Ingresos diarios migrados con éxito!');
@@ -247,5 +242,131 @@ private function migrateDailyIncomes(): void
     }
 }
 
+
+private function migrateInvestments(): void
+{
+    $this->info('Migrando inversiones...');
+
+    // Vaciar la tabla 'investments'
+    DB::connection('mysql')->table('investments');
+
+    // Obtener todos los usuarios
+    $users = DB::connection('mysql')->table('users')->pluck('id');
+
+    // Obtener todas las secciones especiales
+    $specialSections = DB::connection('mysql')->table('special_sections')->pluck('id');
+
+    $investmentTypes = ['acciones', 'otro', 'crypto'];
+    $statuses = ['completado', 'pendiente', 'fallida'];
+
+    $investmentsData = [];
+
+    // Generar 500 registros
+    for ($i = 0; $i < 500; $i++) {
+        $userId = $users->random();
+
+        $specialSectionId = $specialSections->random();
+
+        $investmentType = $investmentTypes[array_rand($investmentTypes)];
+
+        $amount = rand(1000, 100000);
+
+        $result = rand(-10000, 20000); // Pérdidas de hasta -10,000 y ganancias de hasta 20,000
+
+        $status = $statuses[array_rand($statuses)];
+
+        $investmentsData[] = [
+            'user_id' => $userId,
+            'special_section_id' => $specialSectionId,
+            'investment_type' => $investmentType,
+            'amount' => $amount,
+            'result' => $result,
+            'status' => $status,
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ];
+    }
+
+    if (!empty($investmentsData)) {
+        DB::connection('mysql')->table('investments')->insert($investmentsData);
+        $this->info('¡Inversiones migradas con éxito!');
+    } else {
+        $this->info('No se encontraron inversiones para migrar.');
+    }
+}
+
+private function migrateInvestmentResults(): void
+{
+    $this->info('Migrando resultados de inversiones...');
+
+    // Obtener todos los registros de la tabla 'investments'
+    $investments = DB::connection('mysql')->table('investments')->select('id')->get();
+
+    // Generar datos para la tabla 'investment_results'
+    $investmentResultsData = [];
+
+    foreach ($investments as $investment) {
+        // Simular un resultado para cada inversión
+        $result = rand(-10000, 20000); // Resultados de inversión entre -10,000 y 20,000
+
+        $investmentResultsData[] = [
+            'investment_id' => $investment->id,  // Relacionamos con el id de la inversión
+            'result' => $result,                  // Resultado de la inversión
+            'date' => Carbon::now()->format('Y-m-d'), // Fecha del resultado (puedes modificarlo según tu lógica)
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ];
+    }
+
+    // Insertar los resultados de las inversiones en la tabla 'investment_results'
+    if (!empty($investmentResultsData)) {
+        DB::connection('mysql')->table('investment_results')->insert($investmentResultsData);
+        $this->info('¡Resultados de inversiones migrados con éxito!');
+    } else {
+        $this->info('No se encontraron inversiones para migrar a investment_results.');
+    }
+}
+private function migrateFinancialAdvices(): void
+{
+    $this->info('Migrando consejos financieros...');
+
+    // Obtener todos los usuarios
+    $users = DB::connection('mysql')->table('users')->pluck('id');
+
+    $adviceTypes = ['inversión', 'ahorro', 'presupuesto', 'riesgo', 'diversificación'];
+    $advices = [
+        'Diversificar las inversiones para minimizar el riesgo.',
+        'Establecer un presupuesto mensual para el ahorro.',
+        'Invertir en acciones con un análisis profundo de mercado.',
+        'Mantener un fondo de emergencia para imprevistos.',
+        'Evitar el gasto impulsivo y priorizar el ahorro.',
+        'Revisar tus finanzas periódicamente para ajustar tus metas.'
+    ];
+
+    $financialAdvicesData = [];
+
+    // Generar 500 registros
+    for ($i = 0; $i < 500; $i++) {
+        $userId = $users->random();
+        $adviceType = $adviceTypes[array_rand($adviceTypes)];
+        $advice = $advices[array_rand($advices)];
+
+        $financialAdvicesData[] = [
+            'user_id' => $userId,
+            'advice' => $advice,
+            'advice_type' => $adviceType,
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
+        ];
+    }
+
+    // Inserta los datos en la tabla 'financial_advices'
+    if (!empty($financialAdvicesData)) {
+        DB::connection('mysql')->table('financial_advices')->insert($financialAdvicesData);
+        $this->info('¡Consejos financieros migrados con éxito!');
+    } else {
+        $this->info('No se encontraron consejos financieros para migrar.');
+    }
+}
 
 }

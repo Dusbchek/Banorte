@@ -12,7 +12,7 @@ return new class extends Migration
     public function up()
     {
         Schema::create('transactions', function (Blueprint $table) {
-            $table->id(); // Crea la columna 'id' como PK
+            $table->id(); 
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade'); // FK hacia users
             $table->foreignId('special_section_id')->constrained('special_sections')->onDelete('cascade'); // FK hacia special_sections
             $table->string('transaction_type');

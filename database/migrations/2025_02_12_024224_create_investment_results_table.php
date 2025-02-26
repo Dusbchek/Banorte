@@ -12,7 +12,7 @@ return new class extends Migration
     public function up()
     {
         Schema::create('investment_results', function (Blueprint $table) {
-            $table->id(); // Crea la columna 'id' como PK
+            $table->id(); 
             $table->foreignId('investment_id')->constrained('investments')->onDelete('cascade'); // FK hacia investments
             $table->decimal('result', 10, 2);
             $table->timestamp('date');

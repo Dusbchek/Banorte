@@ -12,10 +12,10 @@ return new class extends Migration
     public function up()
     {
         Schema::create('users', function (Blueprint $table) {
-            $table->id(); // Crea la columna 'id' como PK
+            $table->id(); 
             $table->string('name');
             $table->string('role');
-            $table->timestamps(); // Para created_at y updated_at
+            $table->timestamps();
         });
     }
     
