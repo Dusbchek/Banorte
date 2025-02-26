@@ -16,8 +16,10 @@ class Investment extends Model
     protected $fillable = [
         'user_id',       
         'amount',         
-        'investment_date', 
+        'result', 
         'status',
+        'investment_type',
+        'special_section_id'
     ];
 
 

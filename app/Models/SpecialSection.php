@@ -13,17 +13,14 @@ class SpecialSection extends Model
     protected $table = 'special_sections';
 
     protected $fillable = [
-        'title',       
+        'name',       
         'description',  
-        'image',       
-        'status',       
-        'start_date',   
-        'end_date',     
+        'id',       
+        'user_id', 
+        'balance'      
+            
     ];
 
   
-    protected $dates = [
-        'start_date',
-        'end_date',
-    ];
+  
 }

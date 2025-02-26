@@ -16,17 +16,13 @@ class InvestmentResult extends Model
 
     protected $fillable = [
         'investment_id',  
-        'amount',         
-        'return',         
-        'investment_date', 
-        'result_date',    
+        'result',         
+        'date',         
+         
     ];
 
   
-    protected $dates = [
-        'investment_date',
-        'result_date',
-    ];
+  
 
     public function investment()
     {
